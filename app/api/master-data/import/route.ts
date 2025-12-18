@@ -17,9 +17,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No products to import" }, { status: 400 })
     }
 
+    // Filter produk yang valid (harga > 0 dan barcode tidak kosong)
+    const validProducts = (products as Product[]).filter(
+      (p) => p.barcode && p.barcode.trim() !== "" && p.selling_price > 0
+    )
+
+    if (validProducts.length === 0) {
+      return NextResponse.json(
+        { message: "Tidak ada produk valid untuk diimport (pastikan barcode dan harga tidak kosong/0)" },
+        { status: 400 }
+      )
+    }
+
     // Remove duplicates berdasarkan barcode
     const uniqueProducts = Array.from(
-      new Map((products as Product[]).map((p: Product) => [p.barcode, p])).values()
+      new Map(validProducts.map((p: Product) => [p.barcode, p])).values()
     ) as Product[]
 
     // Insert atau update data
@@ -43,7 +55,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `${data.length} produk berhasil diimport`,
+      message: `${data.length} produk berhasil diimport (${products.length - validProducts.length} data diabaikan karena tidak valid)`,
       data,
     })
   } catch (error) {
