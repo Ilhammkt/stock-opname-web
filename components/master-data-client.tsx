@@ -34,53 +34,34 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
     try {
       const text = await file.text()
       const lines = text.split("\n").filter((line) => line.trim())
-      const headers = lines[0]
-        .toLowerCase()
-        .split(",")
-        .map((h) => h.trim())
+      
+      if (lines.length < 2) {
+        alert("File CSV kosong atau tidak valid")
+        setIsUploading(false)
+        return
+      }
+
+      const headers = lines[0].toLowerCase().split(",").map((h) => h.trim())
 
       const barcodeIndex = headers.findIndex((h) => h.includes("barcode"))
-      const productNameIndex = headers.findIndex((h) => h.includes("product") || h.includes("name"))
+      const productNameIndex = headers.findIndex((h) => h.includes("productname") || h.includes("product_name"))
       const uomIndex = headers.findIndex((h) => h.includes("uom"))
-      const priceIndex = headers.findIndex((h) => h.includes("price") || h.includes("selling"))
+      const priceIndex = headers.findIndex((h) => h.includes("sellingprice") || h.includes("selling_price") || h.includes("price"))
 
       if (barcodeIndex === -1 || productNameIndex === -1 || uomIndex === -1 || priceIndex === -1) {
-        alert("Format CSV tidak valid. Pastikan memiliki kolom: Barcode, ProductName, UOM, dan Selling Price")
+        alert(`Format CSV tidak valid. Ditemukan headers: ${headers.join(", ")}`)
         setIsUploading(false)
         return
       }
 
       const productsToImport = lines.slice(1).map((line) => {
-        // Parse CSV dengan proper quote handling
-        const values: string[] = []
-        let current = ""
-        let insideQuotes = false
-
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i]
-          const nextChar = line[i + 1]
-
-          if (char === '"') {
-            insideQuotes = !insideQuotes
-          } else if (char === "," && !insideQuotes) {
-            values.push(current.trim().replace(/^"|"$/g, ""))
-            current = ""
-          } else {
-            current += char
-          }
-        }
-        values.push(current.trim().replace(/^"|"$/g, ""))
-
-        // Parse harga
-        const priceString = values[priceIndex]
-          .replace(/\./g, "")
-          .replace(/,/g, ".")
+        const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""))
 
         return {
           barcode: values[barcodeIndex],
           product_name: values[productNameIndex],
           uom: values[uomIndex],
-          selling_price: parseInt(priceString, 10),
+          selling_price: parseInt(values[priceIndex], 10),
         }
       })
 
