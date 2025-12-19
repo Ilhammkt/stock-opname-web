@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Upload, ArrowLeft, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Upload, ArrowLeft, Trash2, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -25,7 +25,22 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [isUploading, setIsUploading] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
+  const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
+
+  // Filter produk berdasarkan search term
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return products
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase()
+    return products.filter(
+      (product) =>
+        product.barcode.toLowerCase().includes(lowerSearchTerm) ||
+        product.product_name.toLowerCase().includes(lowerSearchTerm)
+    )
+  }, [products, searchTerm])
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -100,10 +115,21 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
     }
   }
 
-  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
   const startIndex = currentPage * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const paginatedProducts = products.slice(startIndex, endIndex)
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+
+  // Reset ke halaman 1 saat search berubah
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage(0)
+  }
+
+  const clearSearch = () => {
+    setSearchTerm("")
+    setCurrentPage(0)
+  }
 
   return (
     <div className="space-y-6">
@@ -124,7 +150,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <Input
               id="file-upload"
               type="file"
@@ -143,9 +169,36 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
 
       <Card>
         <CardHeader>
-          <CardTitle>Data Produk ({products.length})</CardTitle>
+          <CardTitle>Data Produk ({filteredProducts.length})</CardTitle>
+          <CardDescription>Total semua data: {products.length} produk</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Cari berdasarkan barcode atau nama produk..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="pl-10 pr-10"
+            />
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Results info */}
+          {searchTerm && (
+            <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+              Menampilkan {filteredProducts.length} dari {products.length} produk
+            </div>
+          )}
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -158,10 +211,10 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Belum ada data produk. Silakan import data master.
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      {searchTerm ? "Produk tidak ditemukan" : "Belum ada data produk. Silakan import data master."}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -172,7 +225,13 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                       <TableCell>{product.uom}</TableCell>
                       <TableCell className="text-right">Rp {product.selling_price.toLocaleString("id-ID")}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)} style={{ color: "#EF4444" }} className="hover:bg-red-50">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product.id)}
+                          style={{ color: "#EF4444" }}
+                          className="hover:bg-red-50"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -185,9 +244,9 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
-                Halaman {currentPage + 1} dari {totalPages} (Total: {products.length} produk)
+                Halaman {currentPage + 1} dari {totalPages} (Total: {filteredProducts.length} produk)
               </div>
               <div className="flex gap-2">
                 <Button
@@ -197,7 +256,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                   disabled={currentPage === 0}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  
+                  Sebelumnya
                 </Button>
                 <Button
                   variant="outline"
@@ -205,7 +264,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages - 1}
                 >
-                  
+                  Selanjutnya
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
