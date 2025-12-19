@@ -94,7 +94,7 @@ export function ScannerClient({
         }, 100)
       }
     } catch (error) {
-      console.error("[v0] Error scanning barcode:", error)
+      console.error("Error scanning barcode:", error)
       setBarcode("")
       setIsScanning(false)
       
@@ -125,7 +125,7 @@ export function ScannerClient({
         setStockCounts(stockCounts.map((sc) => (sc.id === stockCountId ? data : sc)))
       }
     } catch (error) {
-      console.error("[v0] Error updating count:", error)
+      console.error("Error updating count:", error)
     }
   }
 

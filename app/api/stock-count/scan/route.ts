@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         .single()
 
       if (error) {
-        console.error("[v0] Error updating stock count:", error)
+        console.error("Error updating stock count:", error)
         return NextResponse.json({ message: error.message }, { status: 400 })
       }
 
@@ -59,14 +59,14 @@ export async function POST(request: Request) {
         .single()
 
       if (error) {
-        console.error("[v0] Error inserting stock count:", error)
+        console.error("Error inserting stock count:", error)
         return NextResponse.json({ message: error.message }, { status: 400 })
       }
 
       return NextResponse.json({ success: true, data })
     }
   } catch (error) {
-    console.error("[v0] Error processing scan:", error)
+    console.error("Error processing scan:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       .select()
 
     if (error) {
-      console.error("[v0] Error importing products:", error)
+      console.error("Error importing products:", error)
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       data,
     })
   } catch (error) {
-    console.error("[v0] Error processing import:", error)
+    console.error("Error processing import:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

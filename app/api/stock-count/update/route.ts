@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, data })
     }
   } catch (error) {
-    console.error("[v0] Error updating stock count:", error)
+    console.error("Error updating stock count:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

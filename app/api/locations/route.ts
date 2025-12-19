@@ -17,13 +17,13 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error("[v0] Error creating location:", error)
+      console.error("Error creating location:", error)
       return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
     return NextResponse.json({ success: true, data })
   } catch (error) {
-    console.error("[v0] Error processing location creation:", error)
+    console.error("Error processing location creation:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

@@ -14,7 +14,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Error deleting location:", error)
+    console.error("Error deleting location:", error)
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

@@ -55,7 +55,7 @@ export function StockCountClient({ initialLocations }: { initialLocations: Locat
         alert("Gagal membuat lokasi")
       }
     } catch (error) {
-      console.error("[v0] Error creating location:", error)
+      console.error("Error creating location:", error)
       alert("Terjadi kesalahan")
     } finally {
       setIsCreating(false)

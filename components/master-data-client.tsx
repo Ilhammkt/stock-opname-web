@@ -81,7 +81,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
         alert(`Error: ${error.message}`)
       }
     } catch (error) {
-      console.error("[v0] Error importing file:", error)
+      console.error("Error importing file:", error)
       alert("Gagal mengimport file")
     } finally {
       setIsUploading(false)
@@ -154,7 +154,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                   <TableHead>Nama Produk</TableHead>
                   <TableHead>UOM</TableHead>
                   <TableHead className="text-right">Harga Jual</TableHead>
-                  <TableHead className="w-[100px]">Aksi</TableHead>
+                  <TableHead className="w-25">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
