@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Database, FolderOpen, FileSpreadsheet } from "lucide-react"
@@ -8,7 +9,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">Stock Opname System</h1>
+          <div className="flex items-center gap-3">
+            <Image src="/LogoAM.png" alt="Logo" width={40} height={40} />
+            <h1 className="text-2xl font-bold" style={{ color: "#0db04b" }}>Stock Opname System</h1>
+          </div>
         </div>
       </header>
 
@@ -24,7 +28,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <Link href="/master-data">
-                <Button className="w-full">Kelola Master Data</Button>
+                <Button className="w-full" style={{ backgroundColor: "#0db04b", color: "white" }}>Kelola Master Data</Button>
               </Link>
             </CardContent>
           </Card>
@@ -39,7 +43,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <Link href="/stock-count">
-                <Button className="w-full">Mulai Hitung Stok</Button>
+                <Button className="w-full" style={{ backgroundColor: "#0db04b", color: "white" }}>Mulai Hitung Stok</Button>
               </Link>
             </CardContent>
           </Card>
@@ -54,7 +58,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <Link href="/export">
-                <Button className="w-full">Export Data</Button>
+                <Button className="w-full" style={{ backgroundColor: "#0db04b", color: "white" }}>Export Data</Button>
               </Link>
             </CardContent>
           </Card>

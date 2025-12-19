@@ -172,7 +172,7 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
         </Link>
 
         {locations.length > 0 && (
-          <Button onClick={exportAllToCSV} size="lg">
+          <Button onClick={exportAllToCSV} size="lg" style={{ backgroundColor: "#0db04b", color: "white" }}>
             <Download className="mr-2 h-4 w-4" />
             Export Semua Lokasi
           </Button>
@@ -221,7 +221,7 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
                       )}
                       {location.description && <CardDescription>{location.description}</CardDescription>}
                     </div>
-                    <Button onClick={() => exportToCSV(location)} disabled={location.stockCounts.length === 0}>
+                    <Button onClick={() => exportToCSV(location)} disabled={location.stockCounts.length === 0} style={{ backgroundColor: "#0db04b", color: "white" }}>
                       <Download className="mr-2 h-4 w-4" />
                       Export Lokasi Ini
                     </Button>

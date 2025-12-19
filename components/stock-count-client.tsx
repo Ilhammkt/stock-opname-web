@@ -86,7 +86,7 @@ export function StockCountClient({ initialLocations }: { initialLocations: Locat
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button style={{ backgroundColor: "#0db04b", color: "white" }}>
               <Plus className="mr-2 h-4 w-4" />
               Tambah Lokasi
             </Button>
@@ -124,7 +124,7 @@ export function StockCountClient({ initialLocations }: { initialLocations: Locat
                   placeholder="Deskripsi lokasi"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isCreating}>
+              <Button type="submit" className="w-full" disabled={isCreating} style={{ backgroundColor: "#0db04b", color: "white" }}>
                 {isCreating ? "Membuat..." : "Buat Lokasi"}
               </Button>
             </form>
@@ -151,7 +151,7 @@ export function StockCountClient({ initialLocations }: { initialLocations: Locat
                       <FolderOpen className="h-5 w-5" />
                       <span className="text-lg">{location.name}</span>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(location.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(location.id)} style={{ color: "#EF4444" }} className="hover:bg-red-50">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </CardTitle>
@@ -159,7 +159,7 @@ export function StockCountClient({ initialLocations }: { initialLocations: Locat
                 </CardHeader>
                 <CardContent>
                   <Link href={`/stock-count/scan/${location.id}`}>
-                    <Button className="w-full">Mulai Scan</Button>
+                    <Button className="w-full" style={{ backgroundColor: "#0db04b", color: "white" }}>Mulai Scan</Button>
                   </Link>
                 </CardContent>
               </Card>

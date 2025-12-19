@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Upload, ArrowLeft, Trash2 } from "lucide-react"
+import { Upload, ArrowLeft, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -20,9 +19,12 @@ type Product = {
   created_at: string
 }
 
+const ITEMS_PER_PAGE = 50
+
 export function MasterDataClient({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [isUploading, setIsUploading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
   const router = useRouter()
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +36,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
     try {
       const text = await file.text()
       const lines = text.split("\n").filter((line) => line.trim())
-      
+
       if (lines.length < 2) {
         alert("File CSV kosong atau tidak valid")
         setIsUploading(false)
@@ -98,6 +100,11 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
     }
   }
 
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE)
+  const startIndex = currentPage * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedProducts = products.slice(startIndex, endIndex)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -126,7 +133,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
               disabled={isUploading}
               className="max-w-md"
             />
-            <Button disabled={isUploading}>
+            <Button disabled={isUploading} style={{ backgroundColor: "#0db04b", color: "white" }}>
               <Upload className="mr-2 h-4 w-4" />
               {isUploading ? "Uploading..." : "Upload File"}
             </Button>
@@ -138,7 +145,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
         <CardHeader>
           <CardTitle>Data Produk ({products.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -158,14 +165,14 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                     </TableCell>
                   </TableRow>
                 ) : (
-                  products.map((product) => (
+                  paginatedProducts.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell className="font-mono">{product.barcode}</TableCell>
                       <TableCell>{product.product_name}</TableCell>
                       <TableCell>{product.uom}</TableCell>
                       <TableCell className="text-right">Rp {product.selling_price.toLocaleString("id-ID")}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)} style={{ color: "#EF4444" }} className="hover:bg-red-50">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -175,6 +182,35 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Halaman {currentPage + 1} dari {totalPages} (Total: {products.length} produk)
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 0}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Sebelumnya
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages - 1}
+                >
+                  Selanjutnya
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

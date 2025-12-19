@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Stock Opname System",
+  title: "Amanmart Stock Opname",
   description: "Sistem perhitungan stok gudang dengan barcode scanner",
   icons: {
     icon: "/LogoAM.png",
