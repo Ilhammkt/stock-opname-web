@@ -186,7 +186,7 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <Badge variant="secondary" className="text-base px-0 py-2">
+            <Badge variant="secondary" className="text-base px-2 py-2">
               Total Produk: {totalAllProducts}
             </Badge>
             <Badge variant="secondary" className="text-base px-2 py-2">
