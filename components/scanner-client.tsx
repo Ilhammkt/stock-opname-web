@@ -83,20 +83,26 @@ export function ScannerClient({
         }, 100)
       } else {
         const error = await response.json()
-        alert(error.message || "Produk tidak ditemukan di master data")
         setBarcode("")
         setIsScanning(false)
+        
+        // Tampilkan alert dan auto-focus setelah ditutup
+        alert(error.message || "Produk tidak ditemukan di master data")
         setTimeout(() => {
           inputRef.current?.focus()
+          inputRef.current?.select()
         }, 100)
       }
     } catch (error) {
       console.error("[v0] Error scanning barcode:", error)
-      alert("Terjadi kesalahan saat scanning")
       setBarcode("")
       setIsScanning(false)
+      
+      // Tampilkan alert dan auto-focus setelah ditutup
+      alert("Terjadi kesalahan saat scanning")
       setTimeout(() => {
         inputRef.current?.focus()
+        inputRef.current?.select()
       }, 100)
     }
   }
@@ -135,15 +141,6 @@ export function ScannerClient({
             Kembali
           </Button>
         </Link>
-
-        <div className="flex gap-4">
-          <Badge variant="secondary" className="text-base px-4 py-2">
-            Produk: {uniqueProducts}
-          </Badge>
-          <Badge variant="secondary" className="text-base px-4 py-2">
-            Total Item: {totalItems}
-          </Badge>
-        </div>
       </div>
 
       <Card>
@@ -176,6 +173,14 @@ export function ScannerClient({
           <CardTitle>Hasil Stock Count</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex gap-4">
+            <Badge variant="secondary">
+              Produk: {uniqueProducts}
+            </Badge>
+            <Badge variant="secondary">
+              Total Item: {totalItems}
+            </Badge>
+          </div>
           <div className="rounded-md border">
             <Table>
               <TableHeader>

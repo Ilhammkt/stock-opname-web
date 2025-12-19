@@ -197,7 +197,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                   disabled={currentPage === 0}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Sebelumnya
+                  
                 </Button>
                 <Button
                   variant="outline"
@@ -205,7 +205,7 @@ export function MasterDataClient({ initialProducts }: { initialProducts: Product
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages - 1}
                 >
-                  Selanjutnya
+                  
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
