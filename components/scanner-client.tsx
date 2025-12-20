@@ -38,12 +38,23 @@ export function ScannerClient({
   const [stockCounts, setStockCounts] = useState<StockCount[]>(initialStockCounts)
   const [barcode, setBarcode] = useState("")
   const [isScanning, setIsScanning] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   // Auto focus on input when component mounts
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  // Auto focus edit input when editing starts
+  useEffect(() => {
+    if (editingId) {
+      editInputRef.current?.focus()
+      editInputRef.current?.select()
+    }
+  }, [editingId])
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,6 +140,37 @@ export function ScannerClient({
     }
   }
 
+  const handleEditStart = (stockCountId: string, currentCount: number) => {
+    setEditingId(stockCountId)
+    setEditValue(currentCount.toString())
+  }
+
+  const handleEditSave = async () => {
+    if (editingId && editValue.trim()) {
+      const newCount = parseInt(editValue, 10)
+      if (!isNaN(newCount) && newCount >= 0) {
+        await handleUpdateCount(editingId, newCount)
+      }
+    }
+    setEditingId(null)
+    setEditValue("")
+    inputRef.current?.focus()
+  }
+
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditValue("")
+    inputRef.current?.focus()
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleEditSave()
+    } else if (e.key === "Escape") {
+      handleEditCancel()
+    }
+  }
+
   const totalItems = stockCounts.reduce((sum, sc) => sum + sc.count, 0)
   const uniqueProducts = stockCounts.length
 
@@ -208,23 +250,60 @@ export function ScannerClient({
                       <TableCell className="text-right">Rp {sc.selling_price.toLocaleString("id-ID")}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 bg-transparent"
-                            onClick={() => handleUpdateCount(sc.id, sc.count - 1)}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <span className="min-w-12 text-center font-semibold">{sc.count}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 bg-transparent"
-                            onClick={() => handleUpdateCount(sc.id, sc.count + 1)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                          {editingId === sc.id ? (
+                            <>
+                              <Input
+                                ref={editInputRef}
+                                type="number"
+                                inputMode="numeric"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={handleEditKeyDown}
+                                className="w-16 text-center"
+                                min="0"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={handleEditSave}
+                                className="h-8 px-2"
+                              >
+                                OK
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleEditCancel}
+                                className="h-8 px-2"
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 bg-transparent"
+                                onClick={() => handleUpdateCount(sc.id, sc.count - 1)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span
+                                className="min-w-12 text-center font-semibold cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                onClick={() => handleEditStart(sc.id, sc.count)}
+                              >
+                                {sc.count}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 bg-transparent"
+                                onClick={() => handleUpdateCount(sc.id, sc.count + 1)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

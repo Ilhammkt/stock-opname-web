@@ -7,6 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Download, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 type StockCount = {
   id: string
@@ -33,6 +41,10 @@ const ITEMS_PER_PAGE = 5
 
 export function ExportClient({ locations }: { locations: LocationWithCounts[] }) {
   const [currentPage, setCurrentPage] = useState<{ [key: string]: number }>({})
+  const [showExportDialog, setShowExportDialog] = useState(false)
+  const [exportType, setExportType] = useState<"single" | "all" | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<LocationWithCounts | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   const getCurrentPage = (locationId: string) => {
     return currentPage[locationId] || 0
@@ -56,53 +68,66 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
     return Math.ceil(itemsLength / ITEMS_PER_PAGE)
   }
 
-  const exportToCSV = (location: LocationWithCounts) => {
+  const openExportDialog = (type: "single" | "all", location?: LocationWithCounts) => {
+    setExportType(type)
+    if (type === "single" && location) {
+      setSelectedLocation(location)
+    }
+    setShowExportDialog(true)
+  }
+
+  const handleExport = async (format: "csv" | "xlsx") => {
+    setIsExporting(true)
+    try {
+      if (exportType === "single" && selectedLocation) {
+        await exportSingleLocation(selectedLocation, format)
+      } else if (exportType === "all") {
+        await exportAllLocations(format)
+      }
+      setShowExportDialog(false)
+      setExportType(null)
+      setSelectedLocation(null)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const exportSingleLocation = async (location: LocationWithCounts, format: "csv" | "xlsx") => {
     if (location.stockCounts.length === 0) {
       alert("Tidak ada data untuk diexport")
       return
     }
 
-    // CSV Header
-    const headers = ["Barcode", "Product Name", "UOM", "Selling Price", "Count", "Counted At"]
-    const csvRows = [headers.join(",")]
+    try {
+      const response = await fetch("/api/stock-count/export-location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          location,
+          format,
+        }),
+      })
 
-    // CSV Data (semua data, bukan hanya yang ditampilkan)
-    location.stockCounts.forEach((sc) => {
-      const row = [
-        sc.barcode,
-        `"${sc.product_name}"`,
-        sc.uom,
-        sc.selling_price,
-        sc.count,
-        new Date(sc.counted_at).toLocaleString("id-ID"),
-      ]
-      csvRows.push(row.join(","))
-    })
-
-    // Add summary row
-    csvRows.push("")
-    csvRows.push(`PIC Name,${location.pic_name || "-"}`)
-    csvRows.push(`Location,${location.name}`)
-    csvRows.push(`Total Products,${location.stockCounts.length}`)
-    csvRows.push(`Total Items,${location.totalItems}`)
-
-    // Create and download file
-    const csvContent = csvRows.join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute(
-      "download",
-      `stock-count-${location.name.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.csv`,
-    )
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `stock-count-${location.name.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.${format}`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert("Gagal export data")
+      }
+    } catch (error) {
+      console.error("Error exporting:", error)
+      alert("Terjadi kesalahan saat export")
+    }
   }
 
-  const exportAllToCSV = () => {
+  const exportAllLocations = async (format: "csv" | "xlsx") => {
     const allCounts = locations.flatMap((loc) => loc.stockCounts)
 
     if (allCounts.length === 0) {
@@ -110,52 +135,33 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
       return
     }
 
-    // CSV Header
-    const headers = ["Location", "PIC Name", "Barcode", "Product Name", "UOM", "Selling Price", "Count", "Counted At"]
-    const csvRows = [headers.join(",")]
-
-    // CSV Data
-    locations.forEach((location) => {
-      location.stockCounts.forEach((sc) => {
-        const row = [
-          `"${location.name}"`,
-          location.pic_name || "-",
-          sc.barcode,
-          `"${sc.product_name}"`,
-          sc.uom,
-          sc.selling_price,
-          sc.count,
-          new Date(sc.counted_at).toLocaleString("id-ID"),
-        ]
-        csvRows.push(row.join(","))
+    try {
+      const response = await fetch("/api/stock-count/export-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locations,
+          format,
+        }),
       })
-    })
 
-    // Add summary
-    csvRows.push("")
-    csvRows.push("Summary by Location")
-    locations.forEach((location) => {
-      csvRows.push(
-        `"${location.name}","${location.pic_name || "-"}",${location.stockCounts.length} products,${location.totalItems} items`,
-      )
-    })
-
-    const totalProducts = locations.reduce((sum, loc) => sum + loc.stockCounts.length, 0)
-    const totalItems = locations.reduce((sum, loc) => sum + loc.totalItems, 0)
-    csvRows.push("")
-    csvRows.push(`Grand Total,${totalProducts} products,${totalItems} items`)
-
-    // Create and download file
-    const csvContent = csvRows.join("\n")
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", `stock-count-all-locations-${new Date().toISOString().split("T")[0]}.csv`)
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `stock-count-all-locations-${new Date().toISOString().split("T")[0]}.${format}`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert("Gagal export data")
+      }
+    } catch (error) {
+      console.error("Error exporting:", error)
+      alert("Terjadi kesalahan saat export")
+    }
   }
 
   const totalAllProducts = locations.reduce((sum, loc) => sum + loc.stockCounts.length, 0)
@@ -172,7 +178,11 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
         </Link>
 
         {locations.length > 0 && (
-          <Button onClick={exportAllToCSV} size="lg" style={{ backgroundColor: "#0db04b", color: "white" }}>
+          <Button 
+            onClick={() => openExportDialog("all")} 
+            size="lg" 
+            style={{ backgroundColor: "#0db04b", color: "white" }}
+          >
             <Download className="mr-2 h-4 w-4" />
             Export Semua Lokasi
           </Button>
@@ -221,7 +231,11 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
                       )}
                       {location.description && <CardDescription>{location.description}</CardDescription>}
                     </div>
-                    <Button onClick={() => exportToCSV(location)} disabled={location.stockCounts.length === 0} style={{ backgroundColor: "#0db04b", color: "white" }}>
+                    <Button 
+                      onClick={() => openExportDialog("single", location)} 
+                      disabled={location.stockCounts.length === 0} 
+                      style={{ backgroundColor: "#0db04b", color: "white" }}
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Export Lokasi Ini
                     </Button>
@@ -298,6 +312,38 @@ export function ExportClient({ locations }: { locations: LocationWithCounts[] })
           })}
         </div>
       )}
+
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pilih Format Export</DialogTitle>
+            <DialogDescription>
+              {exportType === "single" 
+                ? `Pilih format untuk export "${selectedLocation?.name}"`
+                : "Pilih format untuk export semua lokasi"
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => handleExport("csv")}
+              disabled={isExporting}
+              className="flex-1"
+            >
+              {isExporting ? "Exporting..." : "Export CSV"}
+            </Button>
+            <Button
+              onClick={() => handleExport("xlsx")}
+              disabled={isExporting}
+              className="flex-1"
+              style={{ backgroundColor: "#0db04b", color: "white" }}
+            >
+              {isExporting ? "Exporting..." : "Export XLSX"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
